@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>>L P2P Game Engine</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <div class="app-window">
+      
+      <!-- Global Audio Toggle (Positioned Bottom-Left) -->
+      <div class="global-audio-toggle" id="audio-toggle-btn" onclick="toggleMute()">🔊</div>
+      
+      <!-- ==========================================
+           MAIN MENU PANEL
+      =========================================== -->
+      <div id="menu-ui" class="panel">
+        <div class="header">
+          <h1>P2P Engine</h1>
+          <p>Drop-in WebRTC Multiplayer</p>
+        </div>
+
+        <div class="profile-preview" onclick="editProfile()">
+          <span id="preview-avatar" class="avatar-display">👽</span>
+          <span id="preview-name" class="name-display">Player</span>
+          <span class="edit-icon">✎</span>
+        </div>
+
+        <div class="menu-actions">
+          <div class="action-card">
+            <h3>Host a Game</h3>
+            <button class="btn primary-btn" onclick="startHosting()">Create Room</button>
+          </div>
+          <div class="action-divider">OR</div>
+          <div class="action-card">
+            <h3>Join a Game</h3>
+            <input type="text" id="join-code" placeholder="Enter 5-Letter Code" maxlength="5" autocomplete="off">
+            <button class="btn" onclick="joinGame()">Join Room</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           PROFILE EDIT PANEL
+      =========================================== -->
+      <div id="profile-ui" class="panel">
+        <div class="header">
+          <h2>Edit Profile</h2>
+        </div>
+        <div class="form-group">
+          <label>Display Name</label>
+          <input type="text" id="player-name" placeholder="Your Name" maxlength="16">
+        </div>
+        <div class="form-group">
+          <label>Choose Avatar</label>
+          <div class="avatar-grid">
+            <div class="avatar-opt active" onclick="selectAvatar('👽')">👽</div>
+            <div class="avatar-opt" onclick="selectAvatar('🤖')">🤖</div>
+            <div class="avatar-opt" onclick="selectAvatar('👻')">👻</div>
+            <div class="avatar-opt" onclick="selectAvatar('🤠')">🤠</div>
+            <div class="avatar-opt" onclick="selectAvatar('🧙')">🧙</div>
+            <div class="avatar-opt" onclick="selectAvatar('🐶')">🐶</div>
+            <div class="avatar-opt" onclick="selectAvatar('🦊')">🦊</div>
+            <div class="avatar-opt" onclick="selectAvatar('🐙')">🐙</div>
+          </div>
+        </div>
+        <button class="btn primary-btn" onclick="confirmProfile()" style="width: 100%; margin-top: 10px;">Save & Return</button>
+      </div>
+
+      <!-- ==========================================
+           LOBBY PANEL (HOST & CLIENT)
+      =========================================== -->
+      <div id="lobby-ui" class="panel">
+        <div class="lobby-header">
+          <div class="lobby-titles">
+            <h2 id="role-title">Lobby</h2>
+            <span id="lobby-game-badge" class="badge">Module: None</span>
+          </div>
+          <button class="btn danger-btn sm-btn" onclick="leaveSession()">Leave</button>
+        </div>
+
+        <div class="lobby-layout">
+          <!-- Left Col: Players -->
+          <div class="lobby-players">
+            <h3>Players</h3>
+            <div id="player-list" class="player-list-container"></div>
+          </div>
+
+          <!-- Right Col: Controls -->
+          <div class="lobby-settings">
+            <!-- Host Only Controls -->
+            <div id="host-controls" style="display: none;">
+              <div class="room-code-box" onclick="copyRoomCode()">
+                <label>Invite Link (Click to Copy)</label>
+                <div id="room-code-display" class="code-display">-----</div>
+              </div>
+              
+              <div class="form-group" style="display: flex; justify-content: space-between; align-items: center;">
+                <label id="game-select-label" style="margin:0;">Select Game Module</label>
+                <!-- Built-in Developer Bot API -->
+                <button class="btn sm-btn" style="padding: 2px 8px;" onclick="window.AddBot()">+ Add Bot</button>
+              </div>
+              <div class="form-group" id="game-select-wrapper">
+                <select id="game-select"></select>
+              </div>
+              
+              <div class="settings-box">
+                <h4>Game Settings</h4>
+                <div id="dynamic-game-settings"></div>
+              </div>
+              
+              <button id="start-btn" class="btn primary-btn pulse" onclick="hostStartGame()" style="width: 100%; display: none;">Start Game</button>
+            </div>
+
+            <!-- Client Only Controls -->
+            <div id="client-controls" style="display: none;">
+              <!-- Ready button injected here by app.js -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           MAIN GAME PANEL
+      =========================================== -->
+      <div id="game-ui" class="panel">
+        
+        <div id="main-game-layout" class="simple-mode">
+          <!-- Game Board Area -->
+          <div class="game-center-col">
+            <div id="game-topbar" class="game-topbar" style="display: none;"></div>
+            <div id="game-toolbar" class="game-toolbar" style="display: none;"></div>
+            <div id="game-board-container" class="game-board-container"></div>
+          </div>
+
+          <!-- Side Panel (Chat & Leaderboard) -->
+          <div id="game-side-panel" class="game-side-panel">
+            <div class="side-leaderboard">
+              <div class="side-header">
+                <span id="turn-indicator">Game in Progress</span>
+                <button class="btn sm-btn danger-btn" onclick="leaveSession()">Quit</button>
+              </div>
+              <div id="in-game-leaderboard" class="mini-player-list"></div>
+            </div>
+            
+            <div class="chat-container">
+              <div id="messages" class="chat-messages"></div>
+              <div class="chat-input-wrapper">
+                <input type="text" id="chat-input" placeholder="Type a message or guess..." onkeypress="if(event.key === 'Enter') sendChatMessage()">
+                <button class="btn primary-btn" onclick="sendChatMessage()">Send</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- ==========================================
+             REMATCH / GAME OVER OVERLAY
+        =========================================== -->
+        <div id="game-over-overlay" class="modal-backdrop">
+          <div class="modal-content" style="text-align: center; padding: 40px; justify-content: center; align-items: center;">
+            <h2 style="font-size: 32px; color: var(--primary-color); margin-bottom: 20px;">Match Complete!</h2>
+            <div id="game-over-controls" style="display:flex; gap:15px;"></div>
+          </div>
+        </div>
+
+      </div> <!-- End Game UI -->
+
+    </div>
+  </div>
+
+  <!-- Global Juice Containers -->
+  <div id="toast-container" class="toast-container"></div>
+  <div id="confetti-container" class="confetti-container"></div>
+
+  <!-- External Libraries -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+  <!-- ========================================================= 
+       DROP IN GAME MODULES HERE 
+       They will automatically register to window.Games 
+  ========================================================== -->
+  <script src="games/template.js"></script>
+
+  <!-- Engine Core (Must load last) -->
+  <script src="app.js"></script>
+
+</body>
+</html>
